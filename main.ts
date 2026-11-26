@@ -7,7 +7,7 @@
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 
-import { copyFileSync, mkdirSync, statSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -18,6 +18,15 @@ const src = join(here, 'entry.png');
 const info = statSync(src);
 if (info.size > 1024 * 1024) {
   throw new Error(`entry.png is ${info.size} bytes, over the 1 MiB gate cap`);
+}
+
+// The gate also caps the image at 1024 by 1024 pixels: read the PNG's own
+// IHDR header (bytes 16-23) and refuse anything larger.
+const head = readFileSync(src);
+const width = head.readUInt32BE(16);
+const height = head.readUInt32BE(20);
+if (width > 1024 || height > 1024) {
+  throw new Error(`entry.png is ${width}x${height}, over the 1024x1024 gate cap`);
 }
 
 mkdirSync(out, { recursive: true });
