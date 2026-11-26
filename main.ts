@@ -7,7 +7,7 @@
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 
-import { copyFileSync, mkdirSync, readFileSync, statSync } from 'node:fs';
+import { closeSync, copyFileSync, mkdirSync, openSync, readSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -20,9 +20,13 @@ if (info.size > 1024 * 1024) {
   throw new Error(`entry.png is ${info.size} bytes, over the 1 MiB gate cap`);
 }
 
-// The gate also caps the image at 1024 by 1024 pixels: read the PNG's own
-// IHDR header (bytes 16-23) and refuse anything larger.
-const head = readFileSync(src);
+// The gate also caps the image at 1024 by 1024 pixels. A PNG stores its width
+// and height in the IHDR chunk: bytes 16-19 are the width, 20-23 the height,
+// both big-endian. Refuse anything larger instead of handing in a bad image.
+const head = Buffer.alloc(24);
+const fd = openSync(src, 'r');
+readSync(fd, head, 0, 24, 0);
+closeSync(fd);
 const width = head.readUInt32BE(16);
 const height = head.readUInt32BE(20);
 if (width > 1024 || height > 1024) {

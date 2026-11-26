@@ -20,6 +20,6 @@ front page with real, legible headlines — no AI-generated text.
 
 `frontpage.html` is the front page itself — plain HTML and CSS, written by hand.
 It was rendered to `entry.png` (1024×1024) in headless Chrome. `main.ts` checks the
-image is under the 1 MiB cap and copies it to `/output/entry.png`.
+image is under the 1 MiB cap and within 1024×1024 pixels, then copies it to `/output/entry.png`.
 
 Entry for [make.fun — Sum up 26 November's world news in one image](https://make.fun/bounty/news-image-20261126).
